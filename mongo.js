@@ -19,9 +19,23 @@ const noteSchema = new mongoose.Schema({
 
 const Note = mongoose.model("Note", noteSchema);
 
+// Note.find({}).then((result) => {
+//   result.forEach((note) => {
+//     console.log(note);
+//   });
+//   mongoose.connection.close();
+// });
+
+Note.find({ important: true }).then((result) => {
+  result.forEach((note) => {
+    console.log("important: ", note);
+  });
+  mongoose.connection.close();
+});
+
 const note = new Note({
-  content: "HTML is Easy",
-  important: true,
+  content: "HTML is difficult",
+  important: false,
 });
 
 note.save().then((result) => {
