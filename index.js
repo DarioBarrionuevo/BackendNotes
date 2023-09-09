@@ -39,22 +39,23 @@ let notes = [
     important: true,
   },
 ];
-
+// GET ROOT
 app.get("/", (req, res) => {
   res.send("<h1>Hello World!</h1>");
 });
-
+// GET ALL NOTES
 app.get("/api/notes", (request, response) => {
   Note.find({}).then((notes) => {
     response.json(notes);
   });
 });
-
-const generateId = () => {
-  const maxId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) : 0;
-  return maxId + 1;
-};
-
+// GET ONE NOTE
+app.get("/api/notes/:id", (request, response) => {
+  Note.findById(request.params.id).then((note) => {
+    response.json(note);
+  });
+});
+// CREATE NEW NOTE
 app.post("/api/notes", (request, response) => {
   const body = request.body;
 
@@ -64,37 +65,23 @@ app.post("/api/notes", (request, response) => {
     });
   }
 
-  const note = {
+  const note = new Note({
     content: body.content,
     important: body.important || false,
-    date: new Date(),
-    id: generateId(),
-  };
+  });
 
-  notes = notes.concat(note);
-
-  response.json(note);
+  note.save().then((savedNote) => {
+    response.json(savedNote);
+  });
 });
-
-app.get("/api/notes/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const note = notes.find((note) => note.id === id);
-
-  if (note) {
-    response.json(note);
-  } else {
-    response.status(404).end();
-  }
-
-  response.json(note);
-});
-
-app.delete("/api/notes/:id", (request, response) => {
-  const id = Number(request.params.id);
-  notes = notes.filter((note) => note.id !== id);
-
-  response.status(204).end();
-});
+// DELETE ONE NOTE
+app.delete('/api/notes/:id', (request, response, next) => {
+  Note.findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+})
 
 app.use(unknownEndpoint);
 
