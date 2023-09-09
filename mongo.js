@@ -18,6 +18,7 @@ const noteSchema = new mongoose.Schema({
 });
 
 const Note = mongoose.model("Note", noteSchema);
+console.log("🚀 ~ file: mongo.js:21 ~ Note:", Note)
 
 // Note.find({}).then((result) => {
 //   result.forEach((note) => {
@@ -34,7 +35,7 @@ Note.find({ important: true }).then((result) => {
 });
 
 const note = new Note({
-  content: "HTML is difficult",
+  content: "CSS is meh",
   important: false,
 });
 
