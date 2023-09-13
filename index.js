@@ -64,13 +64,11 @@ app.get("/api/notes/:id", (request, response) => {
     });
 });
 // CREATE NEW NOTE
-app.post("/api/notes", (request, response) => {
+app.post("/api/notes", (request, response, next) => {
   const body = request.body;
 
-  if (!body.content) {
-    return response.status(400).json({
-      error: "content missing",
-    });
+  if (body.content === undefined) {
+    return response.status(400).json({ error: "content missing" });
   }
 
   const note = new Note({
@@ -78,9 +76,12 @@ app.post("/api/notes", (request, response) => {
     important: body.important || false,
   });
 
-  note.save().then((savedNote) => {
-    response.json(savedNote);
-  });
+  note
+    .save()
+    .then((savedNote) => {
+      response.json(savedNote);
+    })
+    .catch((error) => next(error));
 });
 // DELETE ONE NOTE
 app.delete("/api/notes/:id", (request, response, next) => {
@@ -92,18 +93,21 @@ app.delete("/api/notes/:id", (request, response, next) => {
 });
 // UPDATE ONE NOTE
 app.put("/api/notes/:id", (request, response, next) => {
-  console.log("🚀 ~ file: index.js:95 ~ app.put ~ request:", request.params.id)
-  const body = request.body;
+  console.log("🚀 ~ file: index.js:95 ~ app.put ~ request:", request.params.id);
+  const { content, important } = request.body;
 
-  const note = {
-    content: body.content,
-    important: body.important,
-  };
+  // const note = {
+  //   content: body.content,
+  //   important: body.important,
+  // };
 
-  Note.findByIdAndUpdate(request.params.id, note, { new: true })
+  Note.findByIdAndUpdate(
+    request.params.id,
+    { content, important },
+    { new: true, runValidators: true, context: "query" }
+  )
     .then((updatedNote) => {
       response.json(updatedNote);
-      console.log("🚀 ~ file: index.js:106 ~ .then ~ updatedNote:", updatedNote)
     })
     .catch((error) => next(error));
 });
@@ -115,6 +119,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
